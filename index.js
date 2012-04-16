@@ -68,6 +68,37 @@ Couch.prototype.post = function (doc, cb) {
     if (cb) cb(null, info)
   })
 }
+Couch.prototype.delete = function (id, cb) {
+  var self = this
+    , rev
+    ;
+  if (typeof id === 'object') {
+    rev = id._rev
+    id = id._id
+  }
+  
+  function write (r) {
+    request.del(self.url+id+'?rev='+r, function (e, resp, info) {
+      if (e) return cb(e)
+      if (resp.statusCode === 409 && !rev) {
+        return self.delete(id, cb)
+      }
+      if (resp.statusCode !== 200) {
+        return cb(resp)
+      }
+      cb(null, info)
+    })
+  }
+  
+  if (rev) {
+    write(rev)
+  } else {
+    this.get(id, function (e, doc) {
+      if (e) return cb(e)
+      write(doc._rev)
+    })
+  }
+}
 
 Couch.prototype.design = function (name) {
   if (!this.designs[name]) this.designs[name] = new Design(this, name)
