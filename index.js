@@ -58,7 +58,7 @@ Couch.prototype.get = function (id, cb) {
 }
 
 Couch.prototype.post = function (doc, cb) {
-  if (typeof doc === 'string') doc = {_id:string}
+  if (typeof doc === 'string') doc = {_id:doc}
   if (!doc.created) doc.created = new Date()
   request.post({url:this.url, json:doc}, function (e, resp, info) {
     if (e) return cb(e)
@@ -98,6 +98,17 @@ Couch.prototype.delete = function (id, cb) {
       write(doc._rev)
     })
   }
+}
+
+Couch.prototype.force = function (doc, cb) {
+  if (!doc._id || !doc._rev) throw new Error('Document must have rev and id.')
+  request.post({url:this.url+'_bulk_docs', json:{new_edits:false, docs:[doc]}}, function (e, resp, info) {
+    if (e) return cb(e)
+    info.statusCode = resp.statusCode
+    if (resp.statusCode !== 201) return cb(info)
+    if (!info.rev) return cb(info)
+    if (cb) cb(null, info)
+  })
 }
 
 Couch.prototype.design = function (name) {
