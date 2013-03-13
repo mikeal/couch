@@ -1,11 +1,13 @@
 {
   "name": "couch",
   "dependencies": {
-    "request": ">= 2.1.1",
+    "request": "~2.16.2",
     "follow": "*"
   },
-  "version": "0.0.5",
-  "author": { "name": "Mikeal Rogers",
-              "email": "mikeal.rogers@gmail.com" },
+  "version": "0.2.0",
+  "author": {
+    "name": "Mikeal Rogers",
+    "email": "mikeal.rogers@gmail.com"
+  },
   "description": "Stupid simple Couch wrapper based on Request"
 }
