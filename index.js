@@ -1,6 +1,5 @@
 var request = require('request')
   , qs = require('querystring')
-  , follow = require('follow')
   , jsonreq = request.defaults({json:true})
   ;
   
@@ -22,27 +21,6 @@ function Couch (options) {
   if (self.url[self.url.length - 1] !== '/') self.url += '/'
   self.designs = {}
   
-  if (self.follow) {
-    request({url:self.url, json:true}, function (e, r, info) {
-      self._seq = info.update_seq
-      self.follow = follow(self.url)
-      self.follow.since = self.seq
-      self.follow.once('confirm', function () {
-        self.following = true
-        while (self.afterFollow.length) self.afterFollow.shift()(self)
-      })
-      self.follow.on('change', function (info) {
-        self._seq = info.seq
-      })
-    })
-  }
-}
-Couch.prototype.afterFollow = function (cb) {
-  if (!this.following) this.followCallbacks.push(cb)
-  else cb(this)
-}
-Couch.prototype.seq = function (cb) {
-  this.afterFollow(function (c) { cb(c._seq) })
 }
 
 Couch.prototype.get = function (id, cb) {
