@@ -1,10 +1,9 @@
 {
   "name": "couch",
   "dependencies": {
-    "request": "~2.16.2",
-    "follow": "*"
+    "request": "~2.16.2"
   },
-  "version": "0.2.1",
+  "version": "0.3.1",
   "author": {
     "name": "Mikeal Rogers",
     "email": "mikeal.rogers@gmail.com"
