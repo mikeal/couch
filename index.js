@@ -2,15 +2,15 @@ var request = require('request')
   , qs = require('querystring')
   , jsonreq = request.defaults({json:true})
   ;
-  
+
 var chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-  
-function shortid () {  
-  return chars[Math.floor(Math.random() * chars.length)] + 
+
+function shortid () {
+  return chars[Math.floor(Math.random() * chars.length)] +
          chars[Math.floor(Math.random() * chars.length)] +
-         chars[Math.floor(Math.random() * chars.length)] + 
+         chars[Math.floor(Math.random() * chars.length)] +
          chars[Math.floor(Math.random() * chars.length)]
-}  
+}
 
 function Couch (options) {
   var self = this
@@ -20,11 +20,11 @@ function Couch (options) {
   }
   if (self.url[self.url.length - 1] !== '/') self.url += '/'
   self.designs = {}
-  
+
 }
 
 Couch.prototype.get = function (id, cb) {
-  request({url:this.url+id, json:true}, function (err, resp, doc) {
+  request({url:this.url+encodeURIComponent(id), json:true}, function (err, resp, doc) {
     if (err) return cb(err)
     if (resp.statusCode !== 200) {
       var e = doc ? doc : new Error('CouchDB error.') // make this smarter later
@@ -54,9 +54,9 @@ Couch.prototype.delete = function (id, cb) {
     rev = id._rev
     id = id._id
   }
-  
+
   function write (r) {
-    request.del(self.url+id+'?rev='+r, function (e, resp, info) {
+    request.del(self.url+encodeURIComponent(id)+'?rev='+r, function (e, resp, info) {
       if (e) return cb(e)
       if (resp.statusCode === 409 && !rev) {
         return self.delete(id, cb)
@@ -67,7 +67,7 @@ Couch.prototype.delete = function (id, cb) {
       cb(null, info)
     })
   }
-  
+
   if (rev) {
     write(rev)
   } else {
@@ -145,7 +145,7 @@ Couch.prototype.atomic = function (id, name, value, cb) {
 }
 Couch.prototype.all = function (opts, cb) {
   if (!cb) {
-    cb = opts 
+    cb = opts
     opts = {}
   }
   opts.url = this.url + '_all_docs'
@@ -172,16 +172,16 @@ View.prototype.query = function (opts, cb) {
   if (opts.key) opts.key = JSON.stringify(opts.key)
   if (opts.startkey) opts.startkey = JSON.stringify(opts.startkey)
   if (opts.endkey) opts.endkey = JSON.stringify(opts.endkey)
-  
-  var url = 
+
+  var url =
       opts.url ||
       [ this.design.db.url.slice(0, this.design.db.url.length - 1)
       , '_design', this.design.name, '_view', this.name
-      ].join('/') 
+      ].join('/')
     , q = {}
     ;
   delete opts.url
-  
+
   r = function (callback) {
     if (opts.keys) {
       for (i in opts) {
@@ -194,7 +194,7 @@ View.prototype.query = function (opts, cb) {
       request({url:url, json:true}, callback)
     }
   }
-  
+
   r(function (e, resp, body) {
     if (e) return cb(e)
     if (resp.statusCode !== 200) {
