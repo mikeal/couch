@@ -3,7 +3,7 @@
   "dependencies": {
     "request": "~2.27.0"
   },
-  "version": "0.5.0",
+  "version": "0.5.1",
   "author": {
     "name": "Mikeal Rogers",
     "email": "mikeal.rogers@gmail.com"
