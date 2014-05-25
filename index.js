@@ -41,7 +41,8 @@ Couch.prototype.post = function (doc, cb) {
   request.post({url:this.url, json:doc}, function (e, resp, info) {
     if (e) return cb(e)
     info.statusCode = resp.statusCode
-    if (resp.statusCode !== 201) return cb(info)
+    if ((doc._deleted && resp.statusCode !== 200) ||
+      (!doc._deleted && resp.statusCode !== 201)) return cb(info)
     if (!info.rev) return cb(info)
     if (cb) cb(null, info)
   })
