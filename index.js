@@ -228,6 +228,9 @@ View.prototype.latest = function (startkey, args, cb) {
 module.exports = function (url) {
   return new Couch(url)
 }
+
+module.exports.Couch = Couch;
+
 module.exports.create = function (url, name, cb) {
   if (url[url.length - 1] !== '/') url += '/'
   url += name
