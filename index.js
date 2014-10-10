@@ -95,8 +95,11 @@ Couch.prototype.design = function (name) {
   return this.designs[name]
 }
 
-Couch.prototype.update = function (id, mutate, cb) {
+Couch.prototype.update = function (id, mutate, cb, retries) {
   var self = this
+    , retryMax = retries || 3
+    , retryCount = 0
+
   if (!cb) cb = function () {}
   self.get(id, function (e, doc) {
     if (e && e.error === 'not_found') {
@@ -107,7 +110,10 @@ Couch.prototype.update = function (id, mutate, cb) {
     mutate(doc)
     request.post({url:self.url, json:doc}, function (e, resp, info) {
       if (e) return cb(e)
-      if (resp.statusCode !== 201) return self.update(id, mutate, cb)
+      if (resp.statusCode !== 201){
+        if (retryCount++ <= retryMax) return self.update(id, mutate, cb)
+        else return cb({error: resp.statusCode, reason: resp.statusCode + 'is not 201'})
+      }
       cb(null, info)
     })
   })
