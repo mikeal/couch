@@ -110,9 +110,9 @@ Couch.prototype.update = function (id, mutate, cb, retries) {
     mutate(doc)
     request.post({url:self.url, json:doc}, function (e, resp, info) {
       if (e) return cb(e)
-      if (resp.statusCode !== 201){
+      if (resp.statusCode.toString().charAt(0) !== '2'){
         if (retryCount++ <= retryMax) return self.update(id, mutate, cb)
-        else return cb({error: resp.statusCode, reason: resp.statusCode + 'is not 201'})
+        else return cb({error: resp.statusCode, reason: resp.statusCode + 'is not 2**'})
       }
       cb(null, info)
     })
