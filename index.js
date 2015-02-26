@@ -4,13 +4,15 @@ var request = require('request')
   , qs = require('querystring')
   , jsonreq = request.defaults({json:true})
 
-var chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+function makeError(err, resp){
+  var errObject = new Error(resp.statusCode + ' ' + err.reason)
 
-function shortid () {
-  return chars[Math.floor(Math.random() * chars.length)] +
-         chars[Math.floor(Math.random() * chars.length)] +
-         chars[Math.floor(Math.random() * chars.length)] +
-         chars[Math.floor(Math.random() * chars.length)]
+  // for backward compatbility, we'll add a reason to the error object so that
+  // err.reason will continue to work
+  for (var key in err){
+    if (err.hasOwnProperty(key)) errObject[key] = err[key]
+  }
+  err.statusCode = resp.statusCode
 }
 
 function Couch (options) {
