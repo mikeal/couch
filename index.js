@@ -1,7 +1,8 @@
+'use strict';
+
 var request = require('request')
   , qs = require('querystring')
   , jsonreq = request.defaults({json:true})
-  ;
 
 var chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
@@ -15,8 +16,9 @@ function shortid () {
 function Couch (options) {
   var self = this
   if (typeof options === 'string') options = {url:options}
-  for (i in options) {
-    self[i] = options[i]
+
+  for (var i in options) {
+    if (options.hasOwnProperty(i)) self[i] = options[i]
   }
   if (self.url[self.url.length - 1] !== '/') self.url += '/'
   self.designs = {}
@@ -47,6 +49,7 @@ Couch.prototype.post = function (doc, cb) {
     if (cb) cb(null, info)
   })
 }
+
 Couch.prototype.delete = function (id, cb) {
   var self = this
     , rev
@@ -189,9 +192,9 @@ View.prototype.query = function (opts, cb) {
     ;
   delete opts.url
 
-  r = function (callback) {
+  var r = function (callback) {
     if (opts.keys) {
-      for (i in opts) {
+      for (var i in opts) {
         if (i !== 'keys') q[i] = opts[i]
       }
       url += '?' + qs.stringify(q)
@@ -255,7 +258,7 @@ module.exports.diff = function(a, b, c) {
   // Adapted from https://github.com/cdinger/jquery-objectdiff/blob/master/jquery.objectdiff.js
   c = {} || c;
   [a, b].forEach(function(obj, index) {
-    for (prop in obj) {
+    for (var prop in obj) {
       if (obj.hasOwnProperty(prop)) {
         if (typeof obj[prop] === "object") {
           c[prop] = module.exports.objectDiff(a[prop], b[prop], c);
