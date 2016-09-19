@@ -1,22 +1,26 @@
+'use strict';
+
 var request = require('request')
   , qs = require('querystring')
   , jsonreq = request.defaults({json:true})
-  ;
 
-var chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+function makeError(err, resp){
+  var errObject = new Error(resp.statusCode + ' ' + err.reason)
 
-function shortid () {
-  return chars[Math.floor(Math.random() * chars.length)] +
-         chars[Math.floor(Math.random() * chars.length)] +
-         chars[Math.floor(Math.random() * chars.length)] +
-         chars[Math.floor(Math.random() * chars.length)]
+  // for backward compatbility, we'll add a reason to the error object so that
+  // err.reason will continue to work
+  for (var key in err){
+    if (err.hasOwnProperty(key)) errObject[key] = err[key]
+  }
+  err.statusCode = resp.statusCode
 }
 
 function Couch (options) {
   var self = this
   if (typeof options === 'string') options = {url:options}
-  for (i in options) {
-    self[i] = options[i]
+
+  for (var i in options) {
+    if (options.hasOwnProperty(i)) self[i] = options[i]
   }
   if (self.url[self.url.length - 1] !== '/') self.url += '/'
   self.designs = {}
@@ -27,9 +31,7 @@ Couch.prototype.get = function (id, cb) {
   request({url:this.url+encodeURIComponent(id), json:true}, function (err, resp, doc) {
     if (err) return cb(err)
     if (resp.statusCode !== 200) {
-      var e = doc ? doc : new Error('CouchDB error.') // make this smarter later
-      e.statusCode = resp.statusCode
-      return cb(e)
+      return cb(makeError(doc, resp))
     }
     cb(null, doc)
   })
@@ -42,11 +44,12 @@ Couch.prototype.post = function (doc, cb) {
     if (e) return cb(e)
     info.statusCode = resp.statusCode
     if ((doc._deleted && resp.statusCode !== 200) ||
-      (!doc._deleted && resp.statusCode !== 201)) return cb(info)
-    if (!info.rev) return cb(info)
+      (!doc._deleted && resp.statusCode !== 201)) return cb(makeError(info, resp))
+    if (!info.rev) return cb(makeError(info, resp))
     if (cb) cb(null, info)
   })
 }
+
 Couch.prototype.delete = function (id, cb) {
   var self = this
     , rev
@@ -63,7 +66,7 @@ Couch.prototype.delete = function (id, cb) {
         return self.delete(id, cb)
       }
       if (resp.statusCode !== 200) {
-        return cb(resp)
+        return cb(makeError(info, resp))
       }
       cb(null, info)
     })
@@ -84,8 +87,8 @@ Couch.prototype.force = function (doc, cb) {
   request.post({url:this.url+'_bulk_docs', json:{new_edits:false, docs:[doc]}}, function (e, resp, info) {
     if (e) return cb(e)
     info.statusCode = resp.statusCode
-    if (resp.statusCode !== 201) return cb(info)
-    if (!info.rev) return cb(info)
+    if (resp.statusCode !== 201) return cb(makeError(info, resp))
+    if (!info.rev) return cb(makeError(info, resp))
     if (cb) cb(null, info)
   })
 }
@@ -95,8 +98,11 @@ Couch.prototype.design = function (name) {
   return this.designs[name]
 }
 
-Couch.prototype.update = function (id, mutate, cb) {
+Couch.prototype.update = function (id, mutate, cb, retries) {
   var self = this
+    , retryMax = retries || 3
+    , retryCount = 0
+
   if (!cb) cb = function () {}
   self.get(id, function (e, doc) {
     if (e && e.error === 'not_found') {
@@ -107,7 +113,10 @@ Couch.prototype.update = function (id, mutate, cb) {
     mutate(doc)
     request.post({url:self.url, json:doc}, function (e, resp, info) {
       if (e) return cb(e)
-      if (resp.statusCode !== 201) return self.update(id, mutate, cb)
+      if (resp.statusCode.toString().charAt(0) !== '2'){
+        if (retryCount++ <= retryMax) return self.update(id, mutate, cb)
+        else return cb(makeError({error: resp.statusCode, reason: resp.statusCode + 'is not 2**'}), resp)
+      }
       cb(null, info)
     })
   })
@@ -183,9 +192,9 @@ View.prototype.query = function (opts, cb) {
     ;
   delete opts.url
 
-  r = function (callback) {
+  var r = function (callback) {
     if (opts.keys) {
-      for (i in opts) {
+      for (var i in opts) {
         if (i !== 'keys') q[i] = opts[i]
       }
       url += '?' + qs.stringify(q)
@@ -199,9 +208,7 @@ View.prototype.query = function (opts, cb) {
   r(function (e, resp, body) {
     if (e) return cb(e)
     if (resp.statusCode !== 200) {
-      var e = body ? body : new Error('CouchDB error.') // make this smarter later
-      e.statusCode = resp.statusCode
-      return cb(e)
+      return cb(makeError(body, resp))
     }
     cb(null, body)
   })
@@ -237,9 +244,7 @@ module.exports.create = function (url, name, cb) {
   jsonreq.put(url, function (e, resp, body) {
     if (e) return cb(e)
     if (resp.statusCode !== 201) {
-      var e = body ? body : new Error('CouchDB error.') // make this smarter later
-      e.statusCode = resp.statusCode
-      return cb(e)
+      return cb(makeError(body, resp))
     }
     cb(null, body)
   })
@@ -249,7 +254,7 @@ module.exports.diff = function(a, b, c) {
   // Adapted from https://github.com/cdinger/jquery-objectdiff/blob/master/jquery.objectdiff.js
   c = {} || c;
   [a, b].forEach(function(obj, index) {
-    for (prop in obj) {
+    for (var prop in obj) {
       if (obj.hasOwnProperty(prop)) {
         if (typeof obj[prop] === "object") {
           c[prop] = module.exports.objectDiff(a[prop], b[prop], c);
