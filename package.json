@@ -1,7 +1,7 @@
 {
   "name": "couch",
   "dependencies": {
-    "request": "~2.27.0"
+    "request": "~2.81.0"
   },
   "version": "0.5.1",
   "author": {
