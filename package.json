@@ -1,12 +1,24 @@
 {
   "name": "couch",
   "dependencies": {
-    "request": "~2.27.0"
+    "request": "^2.81.0"
   },
   "version": "0.5.1",
-  "author": {
-    "name": "Mikeal Rogers",
-    "email": "mikeal.rogers@gmail.com"
+  "author": "Mikeal Rogers <mikeal.rogers@gmail.com>",
+  "description": "Stupid simple Couch wrapper based on Request",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "description": "Stupid simple Couch wrapper based on Request"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mikeal/couch.git"
+  },
+  "keywords": [],
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/mikeal/couch/issues"
+  },
+  "homepage": "https://github.com/mikeal/couch#readme"
 }
