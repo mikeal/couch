@@ -13,6 +13,7 @@ function makeError(err, resp){
     if (err.hasOwnProperty(key)) errObject[key] = err[key]
   }
   err.statusCode = resp.statusCode
+  return err
 }
 
 function Couch (options) {
