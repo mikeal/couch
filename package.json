@@ -3,7 +3,7 @@
   "dependencies": {
     "request": "^2.81.0"
   },
-  "version": "0.7.1",
+  "version": "0.8.0",
   "author": "Mikeal Rogers <mikeal.rogers@gmail.com>",
   "description": "Stupid simple Couch wrapper based on Request",
   "main": "index.js",
